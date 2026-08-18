@@ -1,59 +1,45 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
+#include "include/config.h"
+#include "include/socket.h"
+#include "include/request.h"
+#include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/socket.h>
 
-#define IPV4 "127.0.0.1" 
-#define PORT 8080
-#define BUF_SIZE 500
-int main()
+int main(int argc, char *argv[])
 {
-  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-  
-  struct sockaddr_in socket_addr;
-  socket_addr.sin_family = AF_INET;
-  socket_addr.sin_port = htons(PORT); 
-  socket_addr.sin_addr.s_addr = inet_addr(IPV4);
-
-  if(bind(sock_fd, (struct sockaddr *)&socket_addr , sizeof(socket_addr)) == -1)
+  if(argc != 2)
   {
-    perror("Error bind");
     return -1;
   }
+  struct Config config;
 
-  if(listen(sock_fd, 2) == -1)
-  {  
-    perror("Error listen");
-    return -1;
-  }
-	
-	struct sockaddr_in peer_addr;
-	socklen_t peer_addr_len = sizeof(peer_addr);
-	int accepted_sock_fd = accept(sock_fd, (struct sockaddr*)&peer_addr, &peer_addr_len);
-	
-	char receive_buf[BUF_SIZE];
-	char write_buf[BUF_SIZE];
-
-	recv(accepted_sock_fd, receive_buf, sizeof(receive_buf), 0);
-	printf("%s\n", receive_buf);
-	
-	dprintf(accepted_sock_fd, 
-		"HTTP/1.1 200 OK\r\n"
-		"Content-Type:text/html\r\n"
-		"\r\n"
-	);
-
-	dprintf(accepted_sock_fd,
-		"<h1> Hello world <h1>"
-	);
-
-  close(sock_fd);
-	close(accepted_sock_fd);
+  config = parse_config(argv[1]);
   
+
+  int sock_fd = start_socket(AF_INET, config.server.port, config.server.ipv4); 
+  if(sock_fd == -1)
+  {
+    perror("Error");
+    exit(1);
+  }
+
+  int accepted_sock_fd = accept_connection(sock_fd);
+  if(accepted_sock_fd == -1)
+  {
+    perror("Error");
+    exit(1);
+  }
+
+  process_request(accepted_sock_fd, &config);
+
+  close(accepted_sock_fd);
+	close(sock_fd);
+
   return 0;
 }
+
+
+
+
