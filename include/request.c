@@ -1,28 +1,55 @@
 #include "request.h"
 #define BUF_SIZE 500
 
-void parse_request(struct HttpRequest current_request, int client_fd, struct Config *config)
+
+
+void parse_request(struct HttpRequest *current_request, int client_fd, struct Config *config)
 {
-  char *buf_request;
-  if(recv(client_fd, buf_request, BUF_SIZE, 0) == -1)
+  char buf_request[BUF_SIZE];
+  if(recv(client_fd, buf_request, sizeof(buf_request), 0) == -1)
   {
     perror("Error");
     exit(1);
   }
   
+  char method_string[BUF_SIZE];
+  strcpy(method_string, strtok(buf_request, " "));
 
+  char request_path[BUF_SIZE];
+  strcpy(request_path, strtok(NULL, " "));
+  
+  printf("method string: %s\n", method_string);
+  printf("request path: %s\n", request_path);
+  
+  current_request->method = parse_http_method(method_string);
+  strcpy(current_request->host, request_path+1); //remove /
+  
+  for(int i = 0; i < config->sites.sites_size; i++)
+  {
+    if(strcmp(current_request->host, config->sites.site[i].host) == 0)
+    {
+      strcpy(current_request->uri, config->sites.site[i].root);
+    }
+  }
 
-  strtok(buf_request, " ");
-  printf("%s\n", buf_request);
+  //GET /foo.com HTTP/1.1 
+  //
+  // /foo
+  // foo
 }
+
 
 void process_request(int peer_sock_fd, struct Config *config)
 {
   struct HttpRequest request; 
   char *index = "/index.html";
-  char path[strlen(config->sites.site[0].root)+strlen(index)];
-  strcat(path, config->sites.site[0].root);
+  
+  parse_request(&request, peer_sock_fd, config);
+
+  char path[strlen(request.uri)+strlen(index)];
+  strcat(path, request.uri);
   strcat(path, index); 
+
   char recieve_buf[BUF_SIZE];
 
   char send_buf[BUF_SIZE];
@@ -34,7 +61,6 @@ void process_request(int peer_sock_fd, struct Config *config)
    exit(1);
   }
   printf("%i\n", data_fd);
-  parse_request(request, peer_sock_fd, config);
 
   dprintf(peer_sock_fd,
     "HTTP/1.1 200 OK\r\n"

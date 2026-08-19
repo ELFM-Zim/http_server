@@ -9,3 +9,8 @@ root = "./sites/alpha"
 [[sites]]
 host = "beta.com"
 root = "./sites/beta"
+
+[[sites]]
+host = "sigma.com"
+root = "./sites/sigma"
+

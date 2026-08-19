@@ -24,7 +24,7 @@ struct Config parse_config(char *file_name)
     config.sites.sites_size++;
   }
 
-  for(int i = 0; i < site->u.tab.size; i++)
+  for(int i = 0; i < sites.u.arr.size; i++)
   { 
     strcpy(config.sites.site[i].host, site[i].u.tab.value[HOST_INDEX].u.s);
     strcpy(config.sites.site[i].root, site[i].u.tab.value[ROOT_INDEX].u.s);
