@@ -3,11 +3,12 @@
 
 ### Execução
 ```bash
-gcc main.c -o hackton
+make
+
+./servidor server.toml
 ```
 
-Não consegui finalizar o projeto :<
-Então não tenho muito o que comentar :(
+
 
 
 
