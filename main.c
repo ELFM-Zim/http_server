@@ -1,43 +1,47 @@
-#include "include/config.h"
-#include "include/socket.h"
-#include "include/request.h"
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
+#include "include/server.h"
+#include <getopt.h>
 #include <stdio.h>
-#include <sys/socket.h>
+
+enum 
+{
+  OPT_CONFIG = 1,
+  OPT_HELP
+};
 
 int main(int argc, char *argv[])
 {
-  if(argc != 2)
-  {
-    return -1;
+  if (argc == 1) {
+    fprintf(stderr, "Error: no arguments provided\n");
+    fprintf(stderr, "Usage: %s --config=<file.toml>\n", argv[0]);
+    return EXIT_FAILURE;
   }
-  struct Config config;
 
-  config = parse_config(argv[1]);
+  struct option long_options[] =
+  {
+    {"config=", required_argument, 0, OPT_CONFIG},
+    {"help"   , no_argument      , 0, OPT_HELP}
+  };
+
+  int option;
   
-
-  int sock_fd = start_socket(AF_INET, config.server.port, config.server.ipv4); 
-  if(sock_fd == -1)
+  while((option = getopt_long(argc, argv, "", long_options, NULL)) != -1)
   {
-    perror("Error");
-    exit(1);
+    switch(option)
+    {
+      case OPT_CONFIG:
+        int is_success = start_server(optarg);
+        return is_success;
+        break;
+      case OPT_HELP:
+        printf("Usage: %s --config=<file.toml>\n", argv[0]);
+        break;
+      case '?':
+        fprintf(stderr, "Unkown or invalid option\n");
+        printf("Usage: %s --config=<file.toml>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
   }
-
-  int accepted_sock_fd = accept_connection(sock_fd);
-  if(accepted_sock_fd == -1)
-  {
-    perror("Error");
-    exit(1);
-  }
-
-  process_request(accepted_sock_fd, &config);
-
-  close(accepted_sock_fd);
-	close(sock_fd);
-
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 
