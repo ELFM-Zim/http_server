@@ -5,7 +5,7 @@
 ```bash
 make
 
-./servidor server.toml
+./servidor config=server.toml
 ```
 
 
