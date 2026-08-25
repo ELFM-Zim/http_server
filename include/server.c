@@ -11,16 +11,26 @@ int start_server(char *config_path)
     perror("Error");
     return EXIT_FAILURE;
   }
-
-  int accepted_sock_fd = accept_connection(sock_fd);
-  if(accepted_sock_fd == -1)
+  while(true)
   {
-    perror("Error");
-    close(sock_fd);
-    return EXIT_FAILURE;
-  }
+    int accepted_sock_fd = accept_connection(sock_fd);
+    if(accepted_sock_fd == -1)
+    {
+      perror("Error");
+      close(sock_fd);
+      return EXIT_FAILURE;
+    }
+    
+    struct ConnectionData connection_data = 
+    {
+      .peer_sock_fd = accepted_sock_fd,
+      .config = config
+    };
 
-  process_request(accepted_sock_fd, &config);
-  close(accepted_sock_fd);
+    pthread_t thread;
+    
+    pthread_create(&thread, NULL, &process_request, &connection_data);
+
+  }
   close(sock_fd);
 }

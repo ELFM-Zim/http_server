@@ -10,15 +10,22 @@
 #include <sys/sendfile.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+enum status_code {OK, NOT_FOUND};
+
 struct HttpRequest 
 {
   enum HTTP_METHODS method;  
   char host[SITES_PATH_MAX_LEN];
   char uri[SITES_PATH_MAX_LEN];
+  enum status_code status_code;
 };
 
+struct ConnectionData
+{
+  int peer_sock_fd;
+  struct Config config;
+};
 
-void parse_request(struct HttpRequest *current_request, int client_fd, struct Config *config);
-void process_request(int sock_fd, struct Config *config);
-
+void *process_request(void* args);
 #endif //REQUEST_H
