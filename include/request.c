@@ -82,44 +82,74 @@ void read_request(struct HttpRequest *current_request, int peer_sock_fd, struct 
   // foo
 }
 
+void get_directory_files(char **current_request_content, char* directory_path)
+{
+  DIR dirp = opendir(directory_path);
+  errno = 0;
+  struct dirent directory_content;
+  for(int i = 0; (directory_content = readdir(dirp) != NULL); i++)
+  {   
+      if(i > 16)
+      { 
+        printf("MAX_CONTENT reached"); exit(1);
+      }
+     strcpy(current_request_content[i], directory_content);
+  }
+  if(errno != 0)
+  {
+    perror("Error");
+    printf("%s\n", directory_path);
+    exit(1);
+  }
+  closedir(directory_path);
+}
+
+void send_response(char* current_request_content_path)
+{
+  //char *index = "/index.html";
+  //char path[strlen(request.uri)+strlen(index)]; 
+  //memset(path, '\0', sizeof(path));
+  //strcat(path, request.uri);
+  //strcat(path, index); 
+
+  int data_fd;
+  if((data_fd = open(current_request_content_path, 0, O_RDONLY)) == -1)
+  {
+   perror("Error");
+   printf("%s\n", current_request_content_path);
+   exit(1);
+  }
+
+  printf("Content-Type: %s\n", get_content_type(current_request_content_path));
+  dprintf(
+    peer_sock_fd,
+    "HTTP/1.1 %s\r\n"
+    "Content-Type:%s\r\n"
+    "Content-Lenght:%i\r\n"
+    "\r\n",
+    get_status_code(request),
+    get_content_type(current_request_content_path),
+    BUF_SIZE 
+  );
+  struct stat site_stat;
+
+  fstat(data_fd, &site_stat);
+
+  sendfile(peer_sock_fd, data_fd, NULL, site_stat.st_size);
+ 
+  close(data_fd);
+
+}
+
 void write_response(struct HttpRequest request, int peer_sock_fd, struct Config config)
 {
   if(request.status_code == OK)
     {
-      char *index = "/index.html";
-      char path[strlen(request.uri)+strlen(index)]; 
-      memset(path, '\0', sizeof(path));
-      strcat(path, request.uri);
-      strcat(path, index); 
-
-      char recieve_buf[BUF_SIZE];
-
-      int data_fd;
-      if((data_fd = open(path, 0, O_RDONLY)) == -1)
+      get_directory_file(request.request_content, request.uri);
+      for(int i = 0; request.request[i] != NULL; i++)
       {
-       perror("Error");
-       printf("%s\n", path);
-       exit(1);
+        send_response(request.request_content[i]);  
       }
-
-      printf("Content-Type: %s\n", get_content_type(path));
-      dprintf(
-        peer_sock_fd,
-        "HTTP/1.1 %s\r\n"
-        "Content-Type:%s\r\n"
-        "Content-Lenght:%i\r\n"
-        "\r\n",
-        get_status_code(request),
-        get_content_type(path),
-        BUF_SIZE 
-      );
-      struct stat site_stat;
-
-      fstat(data_fd, &site_stat);
-
-      sendfile(peer_sock_fd, data_fd, NULL, site_stat.st_size);
-     
-      close(data_fd);
     }
     else
     {

@@ -19,6 +19,7 @@ struct HttpRequest
   char host[SITES_PATH_MAX_LEN];
   char uri[SITES_PATH_MAX_LEN];
   enum status_code status_code;
+  char *request_content[MAX_CONTENT];
 };
 
 struct ConnectionData
