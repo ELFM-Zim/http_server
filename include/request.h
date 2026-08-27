@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_CONTENT 16
+
 enum status_code {OK, NOT_FOUND};
 
 struct HttpRequest 
@@ -19,7 +21,7 @@ struct HttpRequest
   char host[SITES_PATH_MAX_LEN];
   char uri[SITES_PATH_MAX_LEN];
   enum status_code status_code;
-  char *request_content[MAX_CONTENT];
+  char request_content[MAX_CONTENT][SITES_PATH_MAX_LEN];
 };
 
 struct ConnectionData
