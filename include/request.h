@@ -10,6 +10,9 @@
 #include <sys/sendfile.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #define MAX_CONTENT 16
 

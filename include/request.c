@@ -2,10 +2,10 @@
 #define BUF_SIZE 500
 
 
-char* get_status_code(struct HttpRequest current_request)
+char* get_status_code(enum status_code status_code)
 {
-  if(current_request.status_code      == OK) return "200 OK";
-  else if(current_request.status_code == NOT_FOUND) return "404 Not Found";
+  if(status_code      == OK) return "200 OK";
+  else if(status_code == NOT_FOUND) return "404 Not Found";
 }
 
 char* get_content_type(char* path)
@@ -42,6 +42,28 @@ char* get_content_type(char* path)
   
   return "application/octet-stream";
 
+}
+
+void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MAX_LEN], char* directory_path)
+{
+  DIR *open_directory = opendir(directory_path);
+  errno = 0;
+  struct dirent *directory_content;
+  for(int i = 0; ((directory_content = readdir(open_directory)) != NULL); i++)
+  {   
+      if(i > 16)
+      { 
+        printf("MAX_CONTENT reached"); exit(1);
+      }
+     strcpy(current_request_content[i], directory_content->d_name);
+  }
+  if(errno != 0)
+  {
+    perror("Error");
+    printf("%s\n", directory_path);
+    exit(1);
+  }
+  closedir(open_directory);
 }
 
 void read_request(struct HttpRequest *current_request, int peer_sock_fd, struct Config *config)
@@ -82,29 +104,7 @@ void read_request(struct HttpRequest *current_request, int peer_sock_fd, struct 
   // foo
 }
 
-void get_directory_files(char **current_request_content, char* directory_path)
-{
-  DIR dirp = opendir(directory_path);
-  errno = 0;
-  struct dirent directory_content;
-  for(int i = 0; (directory_content = readdir(dirp) != NULL); i++)
-  {   
-      if(i > 16)
-      { 
-        printf("MAX_CONTENT reached"); exit(1);
-      }
-     strcpy(current_request_content[i], directory_content);
-  }
-  if(errno != 0)
-  {
-    perror("Error");
-    printf("%s\n", directory_path);
-    exit(1);
-  }
-  closedir(directory_path);
-}
-
-void send_response(char* current_request_content_path)
+void send_response(char* current_request_content_path, int peer_sock_fd, enum status_code status_code)
 {
   //char *index = "/index.html";
   //char path[strlen(request.uri)+strlen(index)]; 
@@ -127,7 +127,7 @@ void send_response(char* current_request_content_path)
     "Content-Type:%s\r\n"
     "Content-Lenght:%i\r\n"
     "\r\n",
-    get_status_code(request),
+    get_status_code(status_code),
     get_content_type(current_request_content_path),
     BUF_SIZE 
   );
@@ -145,10 +145,10 @@ void write_response(struct HttpRequest request, int peer_sock_fd, struct Config 
 {
   if(request.status_code == OK)
     {
-      get_directory_file(request.request_content, request.uri);
-      for(int i = 0; request.request[i] != NULL; i++)
+      get_directory_files(request.request_content, request.uri);
+      for(int i = 0; request.request_content != NULL; i++)
       {
-        send_response(request.request_content[i]);  
+        send_response(request.request_content[i], peer_sock_fd, request.status_code);  
       }
     }
     else
@@ -160,7 +160,7 @@ void write_response(struct HttpRequest request, int peer_sock_fd, struct Config 
         "Content-Length: 9\r\n"
         "\r\n"
         "Not Found",
-        get_status_code(request)
+        get_status_code(request.status_code)
       );
     }
 }
