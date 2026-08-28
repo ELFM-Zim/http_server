@@ -49,14 +49,10 @@ void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MA
   DIR *open_directory = opendir(directory_path);
   errno = 0;
   struct dirent *directory_content;
-  
+
   int i = 0;
   while((directory_content = readdir(open_directory)) != NULL)
   {
-    if(i > 16)
-    {
-      printf("MAX_COPNTENT reached");
-    }
     if(strcmp(directory_content->d_name, ".") == 0 || strcmp(directory_content->d_name, "..") == 0) 
     {
       continue;
@@ -69,11 +65,9 @@ void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MA
       i++;
     }
   }
-  
   if(errno != 0)
   {
     perror("Error");
-    printf("%s\n", directory_path);
     exit(1);
   }
   closedir(open_directory);
@@ -160,10 +154,10 @@ void write_response(struct HttpRequest request, int peer_sock_fd, struct Config 
   if(request.status_code == OK)
     {
       get_directory_files(request.request_content, request.uri);
-      for(int i = 0; request.request_content != NULL; i++)
-      {
+      for(int i = 0; strlen(request.request_content[i]) > 0; i++)
+      { 
         send_response(request.request_content[i], peer_sock_fd, request.status_code, request.uri);  
-      }
+      } 
     }
     else
     {
