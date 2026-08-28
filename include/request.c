@@ -49,14 +49,27 @@ void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MA
   DIR *open_directory = opendir(directory_path);
   errno = 0;
   struct dirent *directory_content;
-  for(int i = 0; ((directory_content = readdir(open_directory)) != NULL); i++)
-  {   
-      if(i > 16)
-      { 
-        printf("MAX_CONTENT reached"); exit(1);
-      }
-     strcpy(current_request_content[i], directory_content->d_name);
+  
+  int i = 0;
+  while((directory_content = readdir(open_directory)) != NULL)
+  {
+    if(i > 16)
+    {
+      printf("MAX_COPNTENT reached");
+    }
+    if(strcmp(directory_content->d_name, ".") == 0 || strcmp(directory_content->d_name, "..") == 0) 
+    {
+      continue;
+    }
+    else
+    {
+      printf("Copying %s", directory_content->d_name);
+      strcpy(current_request_content[i], directory_content->d_name);
+      printf(" to %s\n", current_request_content[i]);
+      i++;
+    }
   }
+  
   if(errno != 0)
   {
     perror("Error");
@@ -95,6 +108,7 @@ void read_request(struct HttpRequest *current_request, int peer_sock_fd, struct 
     {
       strcpy(current_request->uri, config->sites.site[i].root);
       current_request->status_code = OK;
+      return;
     }
   }
 
@@ -104,23 +118,23 @@ void read_request(struct HttpRequest *current_request, int peer_sock_fd, struct 
   // foo
 }
 
-void send_response(char* current_request_content_path, int peer_sock_fd, enum status_code status_code)
+void send_response(char* current_content_path, int peer_sock_fd, enum status_code status_code,char* request_uri)
 {
-  //char *index = "/index.html";
-  //char path[strlen(request.uri)+strlen(index)]; 
-  //memset(path, '\0', sizeof(path));
-  //strcat(path, request.uri);
-  //strcat(path, index); 
+  char path[strlen(request_uri)+strlen("/")+strlen(current_content_path)]; 
+  memset(path, '\0', sizeof(path));
+  strcat(path, request_uri);
+  strcat(path, "/");
+  strcat(path, current_content_path); 
 
   int data_fd;
-  if((data_fd = open(current_request_content_path, 0, O_RDONLY)) == -1)
+  if((data_fd = open(path, 0, O_RDONLY)) == -1)
   {
    perror("Error");
-   printf("%s\n", current_request_content_path);
+   printf("Erro ao enviar o arquivo: %s\n", path);
    exit(1);
   }
 
-  printf("Content-Type: %s\n", get_content_type(current_request_content_path));
+  printf("Content-Type: %s\n", get_content_type(path));
   dprintf(
     peer_sock_fd,
     "HTTP/1.1 %s\r\n"
@@ -128,7 +142,7 @@ void send_response(char* current_request_content_path, int peer_sock_fd, enum st
     "Content-Lenght:%i\r\n"
     "\r\n",
     get_status_code(status_code),
-    get_content_type(current_request_content_path),
+    get_content_type(path),
     BUF_SIZE 
   );
   struct stat site_stat;
@@ -148,7 +162,7 @@ void write_response(struct HttpRequest request, int peer_sock_fd, struct Config 
       get_directory_files(request.request_content, request.uri);
       for(int i = 0; request.request_content != NULL; i++)
       {
-        send_response(request.request_content[i], peer_sock_fd, request.status_code);  
+        send_response(request.request_content[i], peer_sock_fd, request.status_code, request.uri);  
       }
     }
     else
