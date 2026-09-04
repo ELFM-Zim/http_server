@@ -1,4 +1,4 @@
-#include "include/server.h"
+#include "server.h"
 #include <getopt.h>
 #include <stdio.h>
 

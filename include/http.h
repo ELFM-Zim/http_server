@@ -1,20 +1,20 @@
-#ifndef UTILS_H
-#define UTILS_H
-
-#include <string.h>
+#ifndef HTTP_H
+#define HTTP_H
 
 enum HTTP_METHODS
 {
-  Get,
-  Put,
-  Head,
-  Post,
-  Delete,
+  GET,
+  POST,
+  PUT,
+  DELETE
 };
 
-const int string_to_method(char *string);
+enum status_code
+{
+  OK,
+  NOT_FOUND
+};
 
-enum HTTP_METHODS parse_http_method(char *method_string);
+enum HTTP_METHODS parse_http_method(char *method);
 
-
-#endif //UITLS_H
+#endif // HTTP_H

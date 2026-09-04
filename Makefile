@@ -1,2 +1,2 @@
 build: 
-		gcc main.c include/server.c include/http.c include/request.c include/config.c include/socket.c  -ltomlc17 -g -o servidor
+		gcc main.c src/utils.c src/server.c src/http.c src/request.c src/config.c src/socket.c  -ltomlc17 -Iinclude -g -o servidor

@@ -1,5 +1,8 @@
 #include "config.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 struct Config parse_config(char *file_name)

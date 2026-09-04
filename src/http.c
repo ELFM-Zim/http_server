@@ -1,5 +1,5 @@
 #include "http.h"
-
+#include <string.h>
 
 #define GET 1
 #define PUT 2
@@ -38,14 +38,14 @@ enum HTTP_METHODS parse_http_method(char *method_string)
   switch(method)
   {
     case GET: 
-      return Get;
+      return GET;
     case PUT: 
-      return Put;
+      return PUT;
     case HEAD:
-      return Head;
+      return HEAD;
     case POST:
-      return Post;
+      return POST;
     case DELETE:
-      return Delete;
+      return DELETE;
   }
 }
