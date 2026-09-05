@@ -3,20 +3,20 @@
 
 #include "config.h"
 #include "http.h"
-
+#include <linux/limits.h>
 struct HttpRequest
 {
-enum HTTP_METHODS method;
-char host[SITES_PATH_MAX_LEN];
-char uri[SITES_PATH_MAX_LEN];
-enum status_code status_code;
-char request_content[MAX_CONTENT][SITES_PATH_MAX_LEN];
+  enum HTTP_METHODS method;
+  char host[PATH_MAX];
+  char uri[PATH_MAX];
+  enum status_code status_code;
+  char *request_content[PATH_MAX];
 };
 
 struct ConnectionData
 {
-int peer_sock_fd;
-struct Config config;
+  int peer_sock_fd;
+  struct Config config;
 };
 
 void *process_request(void *args);

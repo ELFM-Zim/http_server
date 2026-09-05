@@ -5,6 +5,8 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <linux/limits.h>
+#include <sys/stat.h>
 
 char* get_status_code(enum status_code status_code)
 {
@@ -48,8 +50,9 @@ char* get_content_type(char* path)
 
 }
 
-void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MAX_LEN], char* directory_path)
+char** get_directory_files(char* directory_path)
 {
+  char **files_path; 
   DIR *open_directory = opendir(directory_path);
   errno = 0;
   struct dirent *directory_content;
@@ -61,12 +64,20 @@ void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MA
     {
       continue;
     }
-    else
+
+    char new_path[PATH_MAX];
+    snprintf(new_path, sizeof(new_path), "%s/%s", directory_path, directory_content->d_name);
+    
+    struct stat stat_buf;
+    stat(new_path, &stat_buf);
+    if(S_ISDIR(stat_buf.st_mode)) 
     {
-      printf("Copying %s", directory_content->d_name);
-      strcpy(current_request_content[i], directory_content->d_name);
-      printf(" to %s\n", current_request_content[i]);
-      i++;
+      char ** recursive_return = get_directory_files(new_path); 
+      
+    }
+    if(S_ISREG(stat_buf.st_mode))
+    {
+      memcpy(*files_path, new_path, strlen(new_path); 
     }
   }
   if(errno != 0)
@@ -74,5 +85,6 @@ void get_directory_files(char current_request_content[MAX_CONTENT][SITES_PATH_MA
     perror("Error");
     exit(1);
   }
+  return files_path;
   closedir(open_directory);
 }

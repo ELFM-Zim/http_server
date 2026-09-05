@@ -99,7 +99,7 @@ void write_response(struct HttpRequest request, int peer_sock_fd, struct Config 
 {
   if(request.status_code == OK)
     {
-      get_directory_files(request.request_content, request.uri);
+      request.request_content = get_directory_files(request.uri);
       for(int i = 0; strlen(request.request_content[i]) > 0; i++)
       { 
         send_response(request.request_content[i], peer_sock_fd, request.status_code, request.uri);  
